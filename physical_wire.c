@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 			printf("create new socket: %d\n", newsockfd);
 		/* store the new socket into clientlist*/
 		clientlist[i] = newsockfd;
-    thread_soc_arg->index = i;
+    thread_soc_arg.index = i;
 		/*creat a thread to take care of the new connection*/
 		pthread_t pth;	/* this is the thread identifier*/
 		pthread_create(&pth, NULL, onesocket, &thread_soc_arg);
