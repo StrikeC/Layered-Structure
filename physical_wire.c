@@ -24,20 +24,6 @@ int clientlist[2];
 // convert string to frame
 frame frameToRead(char frameIn_s[269]);
 
-// exit server thread
-void *thread_exit(void *arg)
-{
-    char buffer[8];
-    bzero(buffer, 8);
-    while(1)
-    {
-        fgets(buffer, 7, stdin);
-        if (strcmp(buffer,"EXIT\n") == 0)
-            exit(0);
-    }
-    return NULL;
-}
-
 // connection thread  
 void *onesocket (int pthreadArg[2])
 {
@@ -94,14 +80,12 @@ int main(int argc, char *argv[])
          fprintf(stderr,"ERROR, no port provided\n");
          exit(1);
      }
+	
+	/*create socket and listen to it */
 	// create socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0)
         error("ERROR opening socket!");
-	// reuse ports
-    int enable = 1;
-    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-        error("SO_REUSEADDR setting failed!");
 	// fill in server address structure
     bzero((char *) &serv_addr, sizeof(serv_addr));
     portno = atoi(argv[1]);
@@ -113,9 +97,7 @@ int main(int argc, char *argv[])
         error("ERROR on binding!");
 	// listen
     listen(sockfd, 5);
-	// create a thread for manual server exit
-    pthread_t pth;
-    pthread_create(&pth, NULL, thread_exit, NULL);
+	
 	// accept loop
 	for (i=0;i<2;i=i+1) /*only accept two requests*/
 	{

@@ -42,9 +42,9 @@ void * rcvfromwiresend2network_layer ( char *argv[] )
 int main(int argc, char *argv[])
 {
 	int portno2wire, portno, ret;
-	struct sockaddr_in serv_addr, cli_addr;
-	socklen_t clilen = sizeof(cli_addr);
+	struct sockaddr_in serv_addr2wire, serv_addr, cli_addr;
 	struct hostent *server;
+	socklen_t clilen = sizeof(cli_addr);
 
 	// check numeber of arguments
      if (argc < 4) {
@@ -66,12 +66,12 @@ int main(int argc, char *argv[])
         exit(0);
     }
 	// fill in server address structure
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr_list[0], (char *)&serv_addr.sin_addr.s_addr, server->h_length);
-    serv_addr.sin_port = htons(portno2wire);
+    bzero((char *) &serv_addr2wire, sizeof(serv_addr2wire));
+    serv_addr2wire.sin_family = AF_INET;
+    bcopy((char *)server->h_addr_list[0], (char *)&serv_addr2wire.sin_addr.s_addr, server->h_length);
+    serv_addr2wire.sin_port = htons(portno2wire);
 	// connect server
-    if (connect(wiresockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
+    if (connect(wiresockfd, (struct sockaddr *) &serv_addr2wire, sizeof(serv_addr2wire)) < 0) 
         error("ERROR connecting!");
 
 	/*generate a new thread to receive frames from the wire and pass packets to the network layer */
@@ -79,7 +79,22 @@ int main(int argc, char *argv[])
 	pthread_create(&wirepth,NULL,rcvfromwiresend2network_layer, NULL);
 
 	/*add codes to create and listen to a socket that the network_layer will connect to. Assign value to global variable network_layersockfd*/
-    ...
+    // create socket
+    network_layersockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (network_layersockfd < 0)
+        error("ERROR opening socket!");
+    // fill in server address structure
+    bzero((char *) &serv_addr, sizeof(serv_addr));
+    portno = atoi(argv[3]);
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
+    serv_addr.sin_port = htons(portno);
+    // bind socket
+    if (bind(network_layersockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        error("ERROR on binding!");
+    // listen
+    listen(network_layersockfd, 5);
+	
 
 	/*the main function will receive packets from the network layer and pass frames to wire*/
 	 while (1)
