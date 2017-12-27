@@ -92,6 +92,10 @@ int main(int argc, char *argv[])
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0)
         error("ERROR opening socket!");
+	// reuse ports
+    int enable = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+        error("SO_REUSEADDR setting failed!");
 	// fill in server address structure
     bzero((char *) &serv_addr, sizeof(serv_addr));
     portno = atoi(argv[1]);
