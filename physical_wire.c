@@ -20,21 +20,27 @@ void error(const char *msg)
 // list for storing clint sockets
 int clientlist[2];
 
+// struct for threads
+struct threadArg {
+  int sockfd;
+};
+
 /* functions */
 // convert string to frame
 frame frameToRead(char frameIn_s[269]);
 
 // connection thread
-void * onesocket (int threadsockfd)
+void * onesocket (void * arg)
 {
 	char buffer[269]; // read buffer
 	frame bufferFrame; // read buffer for frame
+  struct threadArg *threadsockfd = arg;
 	int theOtherSide_sockfd; // write socket
 	int ret; // for return value
 
-  if (threadsockfd == clientlist[0])
+  if (threadsockfd->sockfd == clientlist[0])
     theOtherSide_sockfd = clientlist[1];
-  else if (threadsockfd == clientlist[1])
+  else if (threadsockfd->sockfd == clientlist[1])
     theOtherSide_sockfd = clientlist[0];
 
 	// read/write loop
@@ -45,7 +51,7 @@ void * onesocket (int threadsockfd)
 		bzero(bufferFrame.my_packet.nickname,10);
 		bzero(bufferFrame.my_packet.message,256);
 		// read from client
-        ret = read(threadsockfd, buffer, 268);
+        ret = read(threadsockfd->sockfd, buffer, 268);
         if (ret < 0)
             error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection
@@ -66,7 +72,7 @@ void * onesocket (int threadsockfd)
 	}
 	// close up
     printf("Machine: %s has exited!\n", bufferFrame.my_packet.nickname);
-    close(threadsockfd);
+    close(threadsockfd->sockfd);
     return NULL;
 }
 
@@ -76,6 +82,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in serv_addr, cli_addr;
 	socklen_t clilen = sizeof(cli_addr);
 	pthread_t threadlist[2];
+  struct threadArg *argsockfd;
 
 	// check the number of arguments
      if (argc < 2)
@@ -111,10 +118,11 @@ int main(int argc, char *argv[])
 		else
 			printf("create new socket: %d\n", newsockfd);
 		/* store the new socket into clientlist*/
-		clientlist[i]=newsockfd;
+		clientlist[i] = newsockfd;
+    argsockfd->sockfd = newsockfd;
 		/*creat a thread to take care of the new connection*/
 		pthread_t pth;	/* this is the thread identifier*/
-		pthread_create(&pth, NULL, onesocket, clientlist[i]);
+		pthread_create(&pth, NULL, onesocket, argsockfd);
 		threadlist[i]=pth; /*save the thread identifier into an array*/
 	}
 
