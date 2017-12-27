@@ -62,8 +62,8 @@ void * rcvfromwiresend2network_layer (void *argv)
 		pbufferFrame = frameToRead(pbuffer);
 		// display
 		printf("Received a packet from wire\n");
-		printf("       Sequence Number: %d\n", pbufferFrame.seq_num);
-		printf("       Frame Type: %d\n", pbufferFrame.type);
+		printf("         Sequence Number: %d\n", pbufferFrame.seq_num);
+		printf("         Frame Type: %d\n", pbufferFrame.type);
 			 
 		/*add codes to send the included packet to the network layer*/	
 		// convert frame to packet

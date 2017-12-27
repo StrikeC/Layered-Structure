@@ -36,13 +36,8 @@ void * onesocket (void * arg)
 	frame bufferFrame; // read buffer for frame
 	struct threadSocArg *thread_soc_arg = (struct threadSocArg*)arg;
 	int sockfd = clientlist[thread_soc_arg->index];
-	int theOtherSide_sockfd; // write socket
+	int theOtherSide_index = 0 - (thread_soc_arg->index - 1); // write socket
 	int ret; // for return value
-
-  if (thread_soc_arg->index == 0)
-    theOtherSide_sockfd = clientlist[1];
-  else if (thread_soc_arg->index == 1)
-    theOtherSide_sockfd = clientlist[0];
 
 	// read/write loop
 	while (1)
@@ -52,11 +47,11 @@ void * onesocket (void * arg)
 		bzero(bufferFrame.my_packet.nickname,10);
 		bzero(bufferFrame.my_packet.message,256);
 		// read from client
-    ret = read(sockfd, buffer, 268);
-    if (ret < 0)
-      error("ERROR reading from socket!");
+		ret = read(sockfd, buffer, 268);
+		if (ret < 0)
+			error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection
-      break;
+			break;
 		// convert buffer to farme
 		bufferFrame = frameToRead(buffer);
 		// print nickename of client
@@ -65,16 +60,16 @@ void * onesocket (void * arg)
 		if (strcmp(bufferFrame.my_packet.message,"EXIT\n") == 0)
 			break;
 		// reply to the other client
-        ret = write(theOtherSide_sockfd, buffer, strlen(buffer));
+        ret = write(clientlist[theOtherSide_index], buffer, strlen(buffer));
         if (ret < 0)
             error("ERROR writing to socket!");
 		else
 			printf("Sending it to machine on the other side...\n");
 	}
 	// close up
-  printf("Machine: %s has exited!\n", bufferFrame.my_packet.nickname);
-  close(sockfd);
-  return NULL;
+	printf("Machine: %s has exited!\n", bufferFrame.my_packet.nickname);
+	close(sockfd);
+	return NULL;
 }
 
 int main(int argc, char *argv[])
