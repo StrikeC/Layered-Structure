@@ -21,8 +21,8 @@ void error(const char *msg)
 int clientlist[2];
 
 // struct for threads
-struct threadArg {
-  int sockfd;
+struct threadSocArg {
+  int index;
 };
 
 /* functions */
@@ -34,13 +34,14 @@ void * onesocket (void * arg)
 {
 	char buffer[269]; // read buffer
 	frame bufferFrame; // read buffer for frame
-  struct threadArg *threadsockfd = arg;
+  struct threadSocArg *thread_soc_arg = (struct threadSocArg*)arg;
+  int sockfd = clientlist[thread_soc_arg->index];
 	int theOtherSide_sockfd; // write socket
 	int ret; // for return value
 
-  if (threadsockfd->sockfd == clientlist[0])
+  if (thread_soc_arg->index == 0)
     theOtherSide_sockfd = clientlist[1];
-  else if (threadsockfd->sockfd == clientlist[1])
+  else if (thread_soc_arg->index == 1)
     theOtherSide_sockfd = clientlist[0];
 
 	// read/write loop
@@ -51,11 +52,11 @@ void * onesocket (void * arg)
 		bzero(bufferFrame.my_packet.nickname,10);
 		bzero(bufferFrame.my_packet.message,256);
 		// read from client
-        ret = read(threadsockfd->sockfd, buffer, 268);
-        if (ret < 0)
-            error("ERROR reading from socket!");
+    ret = read(sockfd, buffer, 268);
+    if (ret < 0)
+      error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection
-            break;
+      break;
 		// convert buffer to farme
 		bufferFrame = frameToRead(buffer);
 		// print nickename of client
@@ -71,9 +72,9 @@ void * onesocket (void * arg)
 			printf("Sending it to machine on the other side...\n");
 	}
 	// close up
-    printf("Machine: %s has exited!\n", bufferFrame.my_packet.nickname);
-    close(threadsockfd->sockfd);
-    return NULL;
+  printf("Machine: %s has exited!\n", bufferFrame.my_packet.nickname);
+  close(sockfd);
+  return NULL;
 }
 
 int main(int argc, char *argv[])
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in serv_addr, cli_addr;
 	socklen_t clilen = sizeof(cli_addr);
 	pthread_t threadlist[2];
-  struct threadArg *argsockfd;
+  struct threadSocArg thread_soc_arg;
 
 	// check the number of arguments
      if (argc < 2)
@@ -119,10 +120,10 @@ int main(int argc, char *argv[])
 			printf("create new socket: %d\n", newsockfd);
 		/* store the new socket into clientlist*/
 		clientlist[i] = newsockfd;
-    argsockfd->sockfd = newsockfd;
+    thread_soc_arg->index = i;
 		/*creat a thread to take care of the new connection*/
 		pthread_t pth;	/* this is the thread identifier*/
-		pthread_create(&pth, NULL, onesocket, argsockfd);
+		pthread_create(&pth, NULL, onesocket, &thread_soc_arg);
 		threadlist[i]=pth; /*save the thread identifier into an array*/
 	}
 
