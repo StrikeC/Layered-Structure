@@ -34,7 +34,7 @@ packet frame2packet(frame frameIn);
 void packetToSend(packet packetIn_p, char packetOut_s[266]);
 
 /*the thread function that receives frames from the wire socket and sends packets to the network_layer */
-void * rcvfromwiresend2network_layer (char *argv[])
+void * rcvfromwiresend2network_layer (char *argv)
 {
 	/*add codes to declare locals*/
 	char pbuffer[269], pbufferPacket_str[266];
@@ -63,7 +63,7 @@ void * rcvfromwiresend2network_layer (char *argv[])
 		// display
 		printf("Received a packet from wire\n");
 		printf("       Sequence Number: %d\n", pbufferFrame.seq_num);
-		printf("       Frame Type: %\n", pbufferFrame.type);
+		printf("       Frame Type: %d\n", pbufferFrame.type);
 			 
 		/*add codes to send the included packet to the network layer*/	
 		// convert frame to packet
