@@ -16,6 +16,11 @@ void error(const char *msg)
     exit(0);
 }
 
+// struct for threads
+struct threadSocArg {
+	int sockfd;
+};
+
 /* functions */
 // convert packet to string
 void packetToSend(packet packetIn_p, char packetOut_s[266]);
@@ -23,11 +28,13 @@ void packetToSend(packet packetIn_p, char packetOut_s[266]);
 packet packetToRead(char packetIn_s[266]);
 
 // the thread function to receive packets from the data link layer and display the messages
-void * rcvmsg (int threadsockfd)
+void * rcvmsg (void *arg)
 {
-	/*add codes for local varialbes*/
+	int ret, threadsockfd;
 	char buffer[266];
 	packet bufferPacket;
+	struct threadSocArg *thread_soc_arg = (struct threadSocArg *) arg;
+	threadsockfd = thread_soc_arg->sockfd;
 	
 	// communication loop
 	while (1)
@@ -44,7 +51,7 @@ void * rcvmsg (int threadsockfd)
 		}
 		// convert buffer to packet
 		bufferPacket = packetToRead(buffer);
-		printf("Receive message: %s\n        From machine: %s\n", bufferPacket.meassge, bufferPacket.nickname);
+		printf("Receive message: %s\n        From machine: %s\n", bufferPacket.message, bufferPacket.nickname);
 	}
 	return NULL;
 }
@@ -57,6 +64,7 @@ int main(int argc, char *argv[])
     struct hostent *server;
 	char buffer[256], packet_str[266];
 	packet bufferPacket;
+	struct threadSocArg thread_soc_arg;
 
 	// check number of aruguments
     if (argc < 4) {
@@ -90,8 +98,9 @@ int main(int argc, char *argv[])
     printf("Ready to communicate\n\n");
 
 	/*creat a thread to receive packets from the data link layer*/
+	thread_soc_arg.sockfd = sockfd;
 	pthread_t pth;	// this is our thread identifier
-	pthread_create(&pth,NULL,rcvmsg,sockfd);
+	pthread_create(&pth,NULL,rcvmsg,&thread_soc_arg);
 
 	/* the main function will receive messages from keyboard and send packets to the data link layer*/
 	// communication loop
@@ -101,7 +110,7 @@ int main(int argc, char *argv[])
 		// receive message from keyboard
         bzero(buffer, 256);
         fgets(buffer, 255, stdin);
-		strcpy(bufferPacket.meassge, buffer);
+		strcpy(bufferPacket.message, buffer);
 		packetToSend(bufferPacket, packet_str);
 		// send message to the data link layer
         ret = write(sockfd, packet_str, strlen(packet_str));

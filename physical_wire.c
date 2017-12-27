@@ -34,8 +34,8 @@ void * onesocket (void * arg)
 {
 	char buffer[269]; // read buffer
 	frame bufferFrame; // read buffer for frame
-  struct threadSocArg *thread_soc_arg = (struct threadSocArg*)arg;
-  int sockfd = clientlist[thread_soc_arg->index];
+	struct threadSocArg *thread_soc_arg = (struct threadSocArg*)arg;
+	int sockfd = clientlist[thread_soc_arg->index];
 	int theOtherSide_sockfd; // write socket
 	int ret; // for return value
 
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_in serv_addr, cli_addr;
 	socklen_t clilen = sizeof(cli_addr);
 	pthread_t threadlist[2];
-  struct threadSocArg thread_soc_arg;
+	struct threadSocArg thread_soc_arg;
 
 	// check the number of arguments
      if (argc < 2)
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 			printf("create new socket: %d\n", newsockfd);
 		/* store the new socket into clientlist*/
 		clientlist[i] = newsockfd;
-    thread_soc_arg.index = i;
+		thread_soc_arg.index = i;
 		/*creat a thread to take care of the new connection*/
 		pthread_t pth;	/* this is the thread identifier*/
 		pthread_create(&pth, NULL, onesocket, &thread_soc_arg);
