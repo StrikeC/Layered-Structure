@@ -53,13 +53,13 @@ void * rcvfromwiresend2network_layer (char *argv[])
 		bzero(pbufferFrame.my_packet.message,256);
 		bzero(pbufferPacket_str,266);
 		// read from wire
-		ret = read(wiresockfd, buffer, 268);
+		ret = read(wiresockfd, pbuffer, 268);
 		if (ret < 0) 
             error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection
             break;
 		// convert buffer to frame
-		pbufferFrame = frameToRead(buffer);
+		pbufferFrame = frameToRead(pbuffer);
 		// display
 		printf("Received a packet from wire\n");
 		printf("       Sequence Number: %d\n", pbufferFrame.seq_num);
