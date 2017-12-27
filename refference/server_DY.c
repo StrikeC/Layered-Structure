@@ -84,6 +84,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "ERROR, no port provided!\n");
         exit(1);
      }
+	
     // create socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
@@ -106,6 +107,7 @@ int main(int argc, char *argv[])
 	// create a thread for server exit
     pthread_t pth;
     pthread_create(&pth, NULL, thread_exit, NULL);
+	
     // accept loop
     printf("Waiting for clients...\n");
     while(1)
