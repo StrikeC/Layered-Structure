@@ -52,7 +52,7 @@ void *thread_connection(void *arg)
     {
         bzero(buffer,256); // empty buffer
         // read from client
-        ret = read(sockfd,buffer,255); 
+        ret = read(sockfd, buffer, 255); 
         if (ret < 0) 
             error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection

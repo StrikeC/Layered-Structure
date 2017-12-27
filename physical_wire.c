@@ -30,18 +30,18 @@ void *onesocket (int pthreadArg[2])
 	char buffer[269]; // read buffer
 	frame bufferFrame; // read buffer for frame
 	int sockfd = clientlist[pthreadArg[0]]; // read socket
-	int pCli_sockfd = clientlist[pthreadArg[1]]; // write socket
+	int theOtherSide_sockfd = clientlist[pthreadArg[1]]; // write socket
 	int ret; // for return value
 	
 	// read/write loop
-	while ()
+	while (1)
 	{
 		// empty buffer
 		bzero(buffer,269);
 		bzero(bufferFrame.my_packet.nickename,10);
 		bzero(bufferFrame.my_packet.message,256);
 		// read from client
-        ret = read(sockfd,buffer,268);
+        ret = read(sockfd, buffer, 268);
         if (ret < 0) 
             error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection
@@ -54,7 +54,7 @@ void *onesocket (int pthreadArg[2])
 		if (strcmp(bufferFrame.my_packet.message,"EXIT\n") == 0)
 			break;
 		// reply to the other client
-        ret = write(pCli_sockfd,buffer,268);
+        ret = write(theOtherSide_sockfd, buffer, strlen(buffer));
         if (ret < 0) 
             error("ERROR writing to socket!");
 		else
