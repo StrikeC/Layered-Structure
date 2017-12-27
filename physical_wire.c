@@ -20,7 +20,8 @@ void error(const char *msg)
 // list for storing clint sockets
 int clientlist[2]; 
 
-// functions
+/* functions */
+// convert string to frame
 frame frameToRead(char frameIn_s[269]);
 
 // exit server thread
