@@ -17,7 +17,7 @@ void packetToSend(packet packetIn_p, char packetOut_s[266]) {
 	len_nickname = strlen(packetIn_p.nickname);
 	// generate string
 	bzero(packetOut_s, 266);
-	sprintf(packetOut_s, "%d%s%s\0", len_nickname, packetIn_p.nickname, packetIn_p.message);
+	sprintf(packetOut_s, "%d%s%s", len_nickname, packetIn_p.nickname, packetIn_p.message);
 }
 
 // convert string to packet
@@ -44,7 +44,7 @@ void frameToSend(frame frameIn_f, char frameOut_s[269]) {
 	seq_num_ch2 = (frameIn_f.seq_num-((frameIn_f.seq_num/10)*10)) + '0';
 	// generate string
 	bzero(frameOut_s, 269);
-	sprintf(frameOut_s, "%d%c%c%d%s%s\0", len_nickname, seq_num_ch1, seq_num_ch2, frameIn_f.type, frameIn_f.my_packet.nickname, frameIn_f.my_packet.message);
+	sprintf(frameOut_s, "%d%c%c%d%s%s", len_nickname, seq_num_ch1, seq_num_ch2, frameIn_f.type, frameIn_f.my_packet.nickname, frameIn_f.my_packet.message);
 }
 
 // convert string to frame
@@ -61,7 +61,7 @@ frame frameToRead(char frameIn_s[269]) {
 	strncpy(frameOut_f.my_packet.nickname, frameIn_s+4, len_nickname);
 	strncpy(frameOut_f.my_packet.message, frameIn_s+(4+len_nickname),(strlen(frameIn_s)-4-len_nickname));
 	return frameOut_f;
-	
+
 }
 
 // convert packet to frame
@@ -81,6 +81,3 @@ packet frame2packet(frame frameIn) {
 	strcpy(packetOut.message, frameIn.my_packet.message);
 	return packetOut;
 }
-
-
-

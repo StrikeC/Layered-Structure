@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <pthread.h>
 #include "structs.h"
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <strings.h>
 
 // handle error
@@ -18,31 +18,35 @@ void error(const char *msg)
 }
 
 // list for storing clint sockets
-int clientlist[2]; 
+int clientlist[2];
 
 /* functions */
 // convert string to frame
 frame frameToRead(char frameIn_s[269]);
 
-// connection thread  
-void *onesocket (int pthreadArg[2])
+// connection thread
+void * onesocket (int threadsockfd)
 {
 	char buffer[269]; // read buffer
 	frame bufferFrame; // read buffer for frame
-	int sockfd = clientlist[pthreadArg[0]]; // read socket
-	int theOtherSide_sockfd = clientlist[pthreadArg[1]]; // write socket
+	int theOtherSide_sockfd; // write socket
 	int ret; // for return value
-	
+
+  if (threadsockfd == clientlist[0])
+    theOtherSide_sockfd = clientlist[1];
+  else if (threadsockfd == clientlist[1])
+    theOtherSide_sockfd = clientlist[0];
+
 	// read/write loop
 	while (1)
 	{
 		// empty buffer
 		bzero(buffer,269);
-		bzero(bufferFrame.my_packet.nickename,10);
+		bzero(bufferFrame.my_packet.nickname,10);
 		bzero(bufferFrame.my_packet.message,256);
 		// read from client
-        ret = read(sockfd, buffer, 268);
-        if (ret < 0) 
+        ret = read(threadsockfd, buffer, 268);
+        if (ret < 0)
             error("ERROR reading from socket!");
 		else if (ret == 0) //indicate that client exit connection
             break;
@@ -50,19 +54,19 @@ void *onesocket (int pthreadArg[2])
 		bufferFrame = frameToRead(buffer);
 		// print nickename of client
 		printf("Recieved a frame from machine: %s\n", bufferFrame.my_packet.nickname);
-		// when client send EXIT\n, the thread returns
+		// when client send EXIT, the thread returns
 		if (strcmp(bufferFrame.my_packet.message,"EXIT\n") == 0)
 			break;
 		// reply to the other client
         ret = write(theOtherSide_sockfd, buffer, strlen(buffer));
-        if (ret < 0) 
+        if (ret < 0)
             error("ERROR writing to socket!");
 		else
 			printf("Sending it to machine on the other side...\n");
 	}
 	// close up
     printf("Machine: %s has exited!\n", bufferFrame.my_packet.nickname);
-    close(sockfd);
+    close(threadsockfd);
     return NULL;
 }
 
@@ -70,17 +74,16 @@ int main(int argc, char *argv[])
 {
 	int sockfd, newsockfd, portno;
 	struct sockaddr_in serv_addr, cli_addr;
-	int threadArg[2];
 	socklen_t clilen = sizeof(cli_addr);
 	pthread_t threadlist[2];
-	
+
 	// check the number of arguments
-     if (argc < 2) 
+     if (argc < 2)
 	 {
          fprintf(stderr,"ERROR, no port provided\n");
          exit(1);
      }
-	
+
 	/*create socket and listen to it */
 	// create socket
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -97,9 +100,9 @@ int main(int argc, char *argv[])
         error("ERROR on binding!");
 	// listen
     listen(sockfd, 5);
-	
+
 	// accept loop
-	for (i=0;i<2;i=i+1) /*only accept two requests*/
+	for (int i=0;i<2;i=i+1) /*only accept two requests*/
 	{
 		/*accept a request from the data link layer*/
 		newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -109,17 +112,15 @@ int main(int argc, char *argv[])
 			printf("create new socket: %d\n", newsockfd);
 		/* store the new socket into clientlist*/
 		clientlist[i]=newsockfd;
-		threadArg[0] = i;
-		threadArg[1] = 0 - (i - 1);
 		/*creat a thread to take care of the new connection*/
 		pthread_t pth;	/* this is the thread identifier*/
-		pthread_create(&pth,NULL,onesocket,threadArg);
-		threadlist[i]=pth; /*save the thread identifier into an array*/ 
+		pthread_create(&pth, NULL, onesocket, clientlist[i]);
+		threadlist[i]=pth; /*save the thread identifier into an array*/
 	}
-	
+
 	close(sockfd); /*so that wire will not accept further connection request*/
-	pthread_join(threadlist[0],NULL);
-	pthread_join(threadlist[1],NULL); /* the main function will not terminated untill both threads finished*/
+	pthread_join(threadlist[0], NULL);
+	pthread_join(threadlist[1], NULL); /* the main function will not terminated untill both threads finished*/
 	return 0;
 
 }
